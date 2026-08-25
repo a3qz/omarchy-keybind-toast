@@ -47,6 +47,44 @@ yet, find it in `/usr/share/omarchy/default/hypr/bindings/*.lua`
 this file as an `hl.unbind(keys)` + `o.bind_toast(keys, description,
 action)` pair (see the existing entries for the shapes `action` accepts).
 
+## Limitations / Troubleshooting
+
+**Nothing happens when I press a bound key.** Most likely one half of the
+two-part install is missing, and neither half errors loudly when it's
+alone:
+- Plugin installed but no `require("hypr.keybind-toast")` in
+  `hyprland.lua` (or the Lua file wasn't copied in) — the plugin sits
+  there ready, nothing ever calls it.
+- Lua file wired up but the plugin isn't installed/enabled —
+  `hl.exec_cmd("omarchy-shell -q keybindToast show ...")` runs, but `-q`
+  makes it fail silently if the IPC target doesn't exist. The keybind
+  itself still works normally; only the toast is missing.
+
+Check both: `omarchy plugin list --json | jq '.[] | select(.id=="io.github.a3qz.keybind-toast")'`
+should show `"enabled": true`, and `grep keybind-toast ~/.config/hypr/hyprland.lua`
+should show the `require` line.
+
+**A keybind I customized myself stopped doing what I set it to.** If you'd
+already rebound one of the ~145 keys this plugin re-declares (in your own
+`bindings.lua` or elsewhere), whichever file Hyprland `require()`s *last*
+wins — `hl.unbind` + rebind on the same key is a last-writer-wins
+operation, not a merge. If `hypr.keybind-toast` is required after your own
+override, it silently takes the key back. Either require your own
+overrides after this file, or remove the specific `hl.unbind`/`o.bind_toast`
+pair for that key from `keybind-toast.lua`.
+
+**Descriptions/dispatchers might drift from Omarchy over time.** This
+plugin doesn't call into Omarchy's live keybinding config — it re-declares
+a hand-copied snapshot of it (both the ~145 bindings themselves and a
+local mirror of Omarchy's private, unexported `command_from()` dispatcher
+helper, since there's no public API to hook into instead). If a future
+Omarchy release changes a default keybind, adds new dispatcher shorthand,
+or changes existing dispatcher behavior, this plugin won't pick that up
+automatically. If something toasts the wrong thing (or a binding you'd
+expect to be here is missing) after an Omarchy update, compare against
+the current `/usr/share/omarchy/default/hypr/bindings/*.lua` and
+`helpers.lua`'s `command_from()`, and open an issue/PR.
+
 ## Removal
 
 ```
