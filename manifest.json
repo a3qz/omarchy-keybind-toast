@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.a3qz.keybind-toast",
+  "name": "Keybind Toast",
+  "version": "1.0.0",
+  "author": "a3qz",
+  "license": "MIT",
+  "description": "Text-only toast naming the Omarchy keybind you just triggered.",
+  "kinds": [
+    "panel"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "panel": "KeybindToast.qml"
+  }
+}
