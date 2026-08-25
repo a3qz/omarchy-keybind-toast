@@ -21,7 +21,12 @@ Item {
   // Generous cap: most descriptions fit on one line under this; the
   // longest wrap to a second line instead of eliding.
   readonly property int maxTextWidth: Style.space(360)
-  readonly property int textWidth: Math.min(Math.ceil(messageMetrics.advanceWidth), root.maxTextWidth)
+  // TextMetrics.advanceWidth is a font-metrics ideal width; the actual bold
+  // Text item can need a hair more (kerning/ink overhang), and with zero
+  // slack that was enough to push single-line messages like "Close window"
+  // into an unwanted wrap. A few px of buffer fixes it without being
+  // visually noticeable.
+  readonly property int textWidth: Math.min(Math.ceil(messageMetrics.advanceWidth) + Style.space(4), root.maxTextWidth)
 
   function show(rawMessage, rawDuration) {
     message = String(rawMessage || "")
