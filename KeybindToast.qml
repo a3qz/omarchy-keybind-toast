@@ -17,6 +17,13 @@ Item {
   property string message: ""
   property int duration: 1200
 
+  // The IPC target is callable by any local process, not just our own
+  // Lua config -- these bound what a caller can force this plugin to
+  // retain/render, regardless of intent behind the call.
+  readonly property int maxPayloadBytes: 8192
+  readonly property int maxMessageLength: 300
+  readonly property int maxDurationMs: 10000
+
   readonly property int pad: Style.space(16)
   // Generous cap: most descriptions fit on one line under this; the
   // longest wrap to a second line instead of eliding.
@@ -29,17 +36,27 @@ Item {
   readonly property int textWidth: Math.min(Math.ceil(messageMetrics.advanceWidth) + Style.space(4), root.maxTextWidth)
 
   function show(rawMessage, rawDuration) {
-    message = String(rawMessage || "")
+    var msg = String(rawMessage || "")
+    if (msg.length > root.maxMessageLength) msg = msg.slice(0, root.maxMessageLength)
+    message = msg
+
     var parsedDuration = parseInt(rawDuration || "1200", 10)
-    duration = isNaN(parsedDuration) ? 1200 : Math.max(0, parsedDuration)
+    if (isNaN(parsedDuration)) parsedDuration = 1200
+    duration = Math.max(0, Math.min(parsedDuration, root.maxDurationMs))
+
     opened = true
     if (duration > 0) hideTimer.restart()
     else hideTimer.stop()
   }
 
   function open(payloadJson) {
+    var raw = payloadJson || "{}"
+    // Reject oversized payloads before parsing -- the IPC target is
+    // callable by any local process, so this can't rely on well-behaved
+    // callers.
+    if (raw.length > root.maxPayloadBytes) return
     try {
-      var p = JSON.parse(payloadJson || "{}")
+      var p = JSON.parse(raw)
       show(p.message || "", p.duration === undefined ? "1200" : String(p.duration))
     } catch (e) {}
   }
