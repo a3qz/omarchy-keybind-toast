@@ -21,21 +21,40 @@ systems — a shell plugin can't install or edit Hyprland config on its own.
 
 ## Install
 
-1. Install and enable the plugin:
-   ```
-   omarchy plugin add https://github.com/a3qz/omarchy-keybind-toast.git --enable
-   omarchy restart shell
-   ```
-2. Copy the companion Lua file into your Hyprland config:
-   ```
-   cp ~/.config/omarchy/plugins/io.github.a3qz.keybind-toast/hypr/keybind-toast.lua ~/.config/hypr/keybind-toast.lua
-   ```
-3. Require it from `~/.config/hypr/hyprland.lua`, near your other
-   `require("hypr.*")` lines:
-   ```lua
-   require("hypr.keybind-toast")
-   ```
-4. `hyprctl reload`.
+Both halves below are required — the plugin alone renders nothing without
+the Lua file telling it when to fire, and neither half errors loudly if
+you skip it (see Troubleshooting).
+
+**1. Install and enable the plugin:**
+```
+omarchy plugin add https://github.com/a3qz/omarchy-keybind-toast.git --enable
+omarchy restart shell
+```
+Verify it's running — this should print `ok`:
+```
+omarchy-shell keybindToast ping
+```
+
+**2. Wire up the Hyprland half.** Copy the companion Lua file into your
+Hyprland config:
+```
+cp ~/.config/omarchy/plugins/io.github.a3qz.keybind-toast/hypr/keybind-toast.lua ~/.config/hypr/keybind-toast.lua
+```
+Add one line to `~/.config/hypr/hyprland.lua`, alongside your other
+`require("hypr.*")` lines (position relative to them doesn't matter):
+```lua
+require("hypr.keybind-toast")
+```
+Reload, then verify it loaded with no errors — this should print nothing:
+```
+hyprctl reload
+hyprctl configerrors
+```
+
+**3. Try it.** Press a bound key — `SUPER + RETURN` (opens your terminal)
+is a good first one. You should see a small centered box at the bottom of
+the screen reading "Terminal". If nothing appears but step 1 and step 2's
+checks both passed, see Troubleshooting below.
 
 ## Customizing which keybinds toast
 
